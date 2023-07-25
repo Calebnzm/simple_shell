@@ -14,10 +14,11 @@
 #define MAX_COMMAND_LENGTH 100
 #define BUFFER_SIZE 1024
 
+int add();
 void display_prompt();
-void execute_command(char *command_line);
+void execute_command(char *command_with_args, char **env);
+char *find_command_path(char *command, char **env);
 int custom_strlen(const char *str);
-int custom_strcmp(const char *s1, const char *s2);
-int main(void);
+int is_valid_command(char *command, char **env);
 
 #endif /* KELVIN && CALEB */

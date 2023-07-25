@@ -1,109 +1,95 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <stdbool.h>
-#include <dirent.h>
 #include "shell.h"
 
-#define MAX_COMMAND_LENGTH 100
 
 /**
- * execute_command - Execute the provided command.
- * @command_with_args: The command with arguments to execute.
- * @env: The environment variables.
- *
- * Return: None.
- */
-void execute_command(char *command_with_args, char **env)
+* executr_command - executes the command by user
+* @command: the command entered
+*
+* Return: nothing(always)
+*/
+void execute_command(char *command_line)
 {
-	char *token;
-	char *args[MAX_COMMAND_LENGTH];
-	int i = 0;
+pid_t pid;
+int status, i;
+char *envp[] = {NULL};
+pid = fork();
 
-	/* Tokenize the command with arguments */
-	token = strtok(command_with_args, " ");
-	while (token != NULL)
-	{
-		args[i] = token;
-		i++;
-		token = strtok(NULL, " ");
-	}
-	args[i] = NULL; /* Null-terminate the argument list */
+if (custom_strcmp(command_line, "exit") == 0)
+{
+        printf("Exiting the shell.\n");
+        exit(EXIT_SUCCESS);
+}
+    if (custom_strcmp(command_line, "env") == 0) {
+        // Print the current environment
+        extern char **environ;
+        char **env = environ;
+        while (*env != NULL) {
+            printf("%s\n", *env);
+            env++;
+        }
+        return;
+    }
+if (pid < 0)
+{
+        perror("Forking failed");
+        exit(EXIT_FAILURE);
+}
+else if (pid == 0)
+{
+        // Count the number of arguments by counting spaces
+        int arg_count = 1;
+        for (int i = 0; command_line[i] != '\0'; i++) {
+            if (command_line[i] == ' ') {
+                arg_count++;
+            }
+        }
 
-	if (strcmp(args[0], "exit") == 0)
-	{
-		/* Exit the shell if the command is "exit" */
-		exit(EXIT_SUCCESS);
-	}
-	else if (strcmp(args[0], "env") == 0)
-	{
-		/* Print the environment variables if the command is "env" */
-		char **env_ptr = env;
-		while (*env_ptr)
-		{
-			printf("%s\n", *env_ptr);
-			env_ptr++;
-		}
-	}
-	else if (strcmp(args[0], "/bin/ls") == 0)
-	{
-		/* List files in the current directory if the command is "/bin/ls" */
-		DIR *dir;
-		struct dirent *entry;
+        char *argv[arg_count + 1]; // Additional 1 for NULL terminator
+        int index = 0;
+        int i = 0;
+        while (command_line[i] != '\0') {
+            // Skip leading spaces
+            while (command_line[i] == ' ') {
+                i++;
+            }
 
-		dir = opendir(".");
-		if (dir == NULL)
-		{
-			perror("Unable to open directory");
-			return;
-		}
+            // Store the start of the current argument
+            int arg_start = i;
 
-		while ((entry = readdir(dir)) != NULL)
-		{
-			printf("%s\n", entry->d_name);
-		}
+            // Find the end of the current argument
+            while (command_line[i] != ' ' && command_line[i] != '\0') {
+                i++;
+            }
+	    // Allocate memory for the current argument and copy it
+            int arg_length = i - arg_start;
+            argv[index] = (char *)malloc(arg_length + 1);
+            if (argv[index] == NULL) {
+                perror("Memory allocation failed");
+                exit(EXIT_FAILURE);
+            }
 
-		closedir(dir);
-	}
-	else
-	{
-		/* Find the full path of the command */
-		char *full_path = find_command_path(args[0], env);
-		if (full_path != NULL)
-		{
-			pid_t pid = fork();
+            int j = 0;
+            while (arg_start < i) {
+                argv[index][j++] = command_line[arg_start++];
+            }
+            argv[index][j] = '\0';
 
-			if (pid < 0)
-			{
-				perror("Fork failed");
-				free(full_path);
-				return;
-			}
-			else if (pid == 0)
-			{
-				/* Child process */
-				if (execve(full_path, args, env) == -1)
-				{
-					perror("Execution error");
-					free(full_path);
-					exit(EXIT_FAILURE);
-				}
-			}
-			else
-			{
-				/* Parent process */
-				int status;
-				waitpid(pid, &status, 0);
-			}
+            index++;
+        }
+        argv[arg_count] = NULL; // Set the last element to NULL to terminate the array
 
-			free(full_path);
-		}
-		else
-		{
-			printf("Command not found: %s\n", args[0]);
-		}
-	}
+        if (execvp(argv[0], argv) == -1) {
+            perror("Error executing command");
+            for (int j = 0; j < arg_count; j++) {
+                free(argv[j]); // Free the allocated memory for arguments
+            }
+            exit(EXIT_FAILURE);
+        }
+}
+else
+{
+do {
+waitpid(pid, &status, WUNTRACED);
+} while (!WIFEXITED(status) && !WIFSIGNALED(status));
+}
 }
