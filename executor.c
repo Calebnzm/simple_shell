@@ -17,10 +17,12 @@ int handle_builtin_commands(char *command_line)
 	if (custom_strcmp(command_line, "env") == 0)
 	{
 		char **env = environ;
+		int fd = STDOUT_FILENO;
 
 		while (*env != NULL)
 		{
-			printf("%s\n", *env);
+			write(fd, *env, custom_strlen(*env));
+			write(fd, "\n", 1);
 			env++;
 		}
 		return (1);
