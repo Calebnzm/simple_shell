@@ -20,7 +20,6 @@ int main(void)
         buffer[read_bytes - 1] = '\0';
         execute_command(buffer);
     }
-    printf("Exiting main loop\n"); // Debug statement to check if the main loop is running as expected
     return 0;
 }
 
