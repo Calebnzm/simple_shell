@@ -37,7 +37,7 @@ void freer(char **argv)
 * saver - checks if full_path is NULL
 * @command: the command to be printed
 * @argv: the vector to be freed
-* @full_path - the path
+* @full_path: the path
 *
 * Return: Nothing
 */
