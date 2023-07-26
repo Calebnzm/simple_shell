@@ -14,6 +14,11 @@
 #define MAX_COMMAND_LENGTH 100
 #define BUFFER_SIZE 1024
 
+void saver(char *full_path, char **argv, char *command);
+pid_t pid;
+void writeerror(char *command);
+void freer(char **argv);
+char **environ;
 void display_prompt();
 char **split_command_line(char *command_line, int *arg_count);
 void execute_with_full_path(char *full_path, char **argv);
