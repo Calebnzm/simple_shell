@@ -6,158 +6,200 @@
 #include <sys/wait.h>
 #include "shell.h"
 
-// Split command line into arguments and return the array of arguments
-char **split_command_line(char *command_line, int *arg_count)
+void execute_command(char *command_line)
 {
-    *arg_count = 1;
-    for (int i = 0; command_line[i] != '\0'; i++)
+    pid_t pid;
+    int status, i;
+
+    pid = fork();
+
+    if (custom_strcmp(command_line, "exit") == 0)
     {
-        if (command_line[i] == ' ')
-        {
-            (*arg_count)++;
-        }
+        printf("Exiting the shell.\n");
+        exit(EXIT_SUCCESS);
     }
 
-    char **argv = (char **)malloc((*arg_count + 1) * sizeof(char *));
-    if (argv == NULL)
+    if (custom_strcmp(command_line, "env") == 0)
     {
-        perror("Memory allocation failed");
+        // Print the current environment
+        extern char **environ;
+        char **env = environ;
+        while (*env != NULL)
+        {
+            printf("%s\n", *env);
+            env++;
+        }
+        return;
+    }
+
+    if (pid < 0)
+    {
+        perror("Forking failed");
         exit(EXIT_FAILURE);
     }
-
-    char *token = strtok(command_line, " ");
-    int i = 0;
-    while (token != NULL)
+    else if (pid == 0)
     {
-        int arg_length = strlen(token);
-        argv[i] = (char *)malloc((arg_length + 1) * sizeof(char));
-        if (argv[i] == NULL)
+        // Count the number of arguments by counting spaces
+        int arg_count = 1;
+        for (i = 0; command_line[i] != '\0'; i++)
+        {
+            if (command_line[i] == ' ')
+            {
+                arg_count++;
+            }
+        }
+
+        char **argv = (char **)malloc((arg_count + 1) * sizeof(char *));
+        if (argv == NULL)
         {
             perror("Memory allocation failed");
-            for (int j = 0; j < i; j++)
-            {
-                free(argv[j]);
-            }
-            free(argv);
             exit(EXIT_FAILURE);
         }
-        strcpy(argv[i], token);
-        token = strtok(NULL, " ");
-        i++;
-    }
-    argv[i] = NULL; // Set the last element to NULL to terminate the array
 
-    return argv;
-}
-
-// Execute the command with the provided full path
-void execute_with_full_path(char *full_path, char **argv)
-{
-    extern char **environ; // Retrieve the current environment variables
-    if (execve(full_path, argv, environ) == -1)
-    {
-        perror("Error executing command");
-        for (int j = 0; argv[j] != NULL; j++)
-        {
-            free(argv[j]); // Free the allocated memory for arguments
-        }
-        free(argv);
-        exit(EXIT_FAILURE);
-    }
-}
-
-// Search for the full path of the command in the PATH environment variable
-char *find_full_path(char *command)
-{
-    char *full_path = NULL;
-    char *path = getenv("PATH");
-    if (path != NULL)
-    {
-        char *token = strtok(path, ":");
+        // Tokenize the command line into arguments
+        char *token = strtok(command_line, " ");
+        i = 0;
         while (token != NULL)
         {
-            int dir_length = strlen(token);
-            int cmd_length = strlen(command);
-            full_path = (char *)malloc((dir_length + cmd_length + 2) * sizeof(char));
-            if (full_path == NULL)
+            int arg_length = strlen(token);
+            argv[i] = (char *)malloc((arg_length + 1) * sizeof(char));
+            if (argv[i] == NULL)
             {
                 perror("Memory allocation failed");
+                for (int j = 0; j < i; j++)
+                {
+                    free(argv[j]);
+                }
+                free(argv);
                 exit(EXIT_FAILURE);
             }
 
+            // Manually copy characters from token to argv[i]
             int j;
             for (j = 0; token[j] != '\0'; j++)
             {
-                full_path[j] = token[j];
+                argv[i][j] = token[j];
             }
-            full_path[j] = '/';
-            j++;
+            argv[i][j] = '\0';
 
-            for (int k = 0; command[k] != '\0'; k++, j++)
-            {
-                full_path[j] = command[k];
-            }
-            full_path[j] = '\0';
+            token = strtok(NULL, " ");
+            i++;
+        }
+        argv[i] = NULL; // Set the last element to NULL to terminate the array
 
-            if (access(full_path, X_OK) == 0)
+        // Execute the command using execve with the full path
+        char *command = argv[0];
+
+        // Check if the command contains '/'
+        int has_slash = 0;
+        for (i = 0; command[i] != '\0'; i++)
+        {
+            if (command[i] == '/')
             {
-                // Found the executable, break the loop
+                has_slash = 1;
                 break;
             }
-
-            free(full_path);
-            full_path = NULL;
-            token = strtok(NULL, ":");
         }
-    }
 
-    return full_path;
-}
-
-// Execute the command
-void execute_command(char *command_line)
-{
-    int arg_count;
-    char **argv = split_command_line(command_line, &arg_count);
-
-    char *command = argv[0];
-    int has_slash = 0;
-    for (int i = 0; command[i] != '\0'; i++)
-    {
-        if (command[i] == '/')
+        if (has_slash)
         {
-            has_slash = 1;
-            break;
+            extern char **environ; // Retrieve the current environment variables
+            if (execve(command, argv, environ) == -1)
+            {
+                perror("Error executing command");
+                for (int j = 0; argv[j] != NULL; j++)
+                {
+                    free(argv[j]); // Free the allocated memory for arguments
+                }
+                free(argv);
+                exit(EXIT_FAILURE);
+            }
         }
-    }
+        else
+        {
+            // Search for the executable in the PATH
+            char *full_path = NULL;
+            char *path = getenv("PATH");
+            if (path != NULL)
+            {
+                char *token = strtok(path, ":");
+                while (token != NULL)
+                {
+                    // Construct the full path by concatenating the token (directory) with the command
+                    int dir_length = strlen(token);
+                    int cmd_length = strlen(command);
+                    full_path = (char *)malloc((dir_length + cmd_length + 2) * sizeof(char));
+                    if (full_path == NULL)
+                    {
+                        perror("Memory allocation failed");
+                        for (int j = 0; argv[j] != NULL; j++)
+                        {
+                            free(argv[j]);
+                        }
+                        free(argv);
+                        exit(EXIT_FAILURE);
+                    }
 
-    if (has_slash)
-    {
-        execute_with_full_path(command, argv);
+                    // Manually copy characters from token to full_path
+                    int j;
+                    for (j = 0; token[j] != '\0'; j++)
+                    {
+                        full_path[j] = token[j];
+                    }
+                    full_path[j] = '/';
+                    j++;
+
+                    for (int k = 0; command[k] != '\0'; k++, j++)
+                    {
+                        full_path[j] = command[k];
+                    }
+                    full_path[j] = '\0';
+
+                    if (access(full_path, X_OK) == 0)
+                    {
+                        // Found the executable, break the loop
+                        break;
+                    }
+
+                    free(full_path);
+                    full_path = NULL;
+                    token = strtok(NULL, ":");
+                }
+            }
+
+            if (full_path == NULL)
+            {
+                // Executable not found
+                fprintf(stderr, "Error: Command not found: %s\n", command);
+                for (int j = 0; argv[j] != NULL; j++)
+                {
+                    free(argv[j]);
+                }
+                free(argv);
+                exit(EXIT_FAILURE);
+            }
+
+            printf("Full path: %s\n", full_path);
+
+            extern char **environ; // Retrieve the current environment variables
+            if (execve(full_path, argv, environ) == -1)
+            {
+                perror("Error executing command");
+                free(full_path);
+                for (int j = 0; argv[j] != NULL; j++)
+                {
+                    free(argv[j]); // Free the allocated memory for arguments
+                }
+                free(argv);
+                exit(EXIT_FAILURE);
+            }
+        }
     }
     else
     {
-        char *full_path = find_full_path(command);
-        if (full_path == NULL)
+        do
         {
-            // Executable not found
-            fprintf(stderr, "Error: Command not found: %s\n", command);
-            for (int j = 0; argv[j] != NULL; j++)
-            {
-                free(argv[j]);
-            }
-            free(argv);
-            exit(EXIT_FAILURE);
-        }
-
-        printf("Full path: %s\n", full_path);
-
-        execute_with_full_path(full_path, argv);
+            waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
-
-    for (int j = 0; argv[j] != NULL; j++)
-    {
-        free(argv[j]); // Free the allocated memory for arguments
-    }
-    free(argv);
 }
