@@ -132,15 +132,13 @@ char *find_full_path(char *command)
 				exit(EXIT_FAILURE);
 			}
 			for (j = 0; token[j] != '\0'; j++)
-			{
 				full_path[j] = token[j];
-			}
-				full_path[j++] = '/';
+			full_path[j++] = '/';
 			for (k = 0; command[k] != '\0'; k++)
 			{
 				full_path[j++] = command[k];
 			}
-				full_path[j] = '\0';
+			full_path[j] = '\0';
 			if (access(full_path, X_OK) == 0)
 				return (full_path);
 			free(full_path);

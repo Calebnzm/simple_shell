@@ -12,6 +12,8 @@
 int main(void)
 {
 	/* Declare variables */
+	int read_bytes;
+	char buffer[BUFFER_SIZE];
 
 	/* Start the main loop */
 	while (1)
