@@ -105,11 +105,11 @@ void execute_with_full_path(char *full_path, char **argv)
  */
 char *find_full_path(char *command)
 {
-	char *full_path, *token, *path;
-	int j, dir_length, k, cmd_length;
+	char *full_path, *path = NULL, *token/* = strtok(path, ":")*/;
+	int j, k;
+	int dir_length, cmd_length = custom_strlen(command);
 
 	full_path = NULL;
-	path = NULL;
 	for (j = 0; environ[j] != NULL; j++)
 	{
 		if (custom_strncmp(environ[j], "PATH=", 5) == 0)
@@ -124,7 +124,6 @@ char *find_full_path(char *command)
 		while (token != NULL)
 		{
 			dir_length = custom_strlen(token);
-			cmd_length = custom_strlen(command);
 			full_path = malloc((dir_length + cmd_length + 2) * sizeof(char));
 			if (full_path == NULL)
 			{
