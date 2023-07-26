@@ -1,16 +1,6 @@
 #include "shell.h"
 
 /**
- * is_interactive_shell - Check if the shell is running in interactive mode.
- *
- * Return: true if running in interactive mode, false otherwise.
- */
-bool is_interactive_shell(void)
-{
-	return (isatty(STDIN_FILENO) != 0);
-}
-
-/**
  * main - Entry point for the shell program.
  *
  * Description: This function initializes the shell and enters a loop
@@ -22,15 +12,11 @@ bool is_interactive_shell(void)
 int main(void)
 {
 	/* Declare variables */
-	char buffer[BUFFER_SIZE]; /* Buffer to store user input */
-	bool interactive_mode = is_interactive_shell();
-	int read_bytes; /* Number of bytes read from user input */
 
 	/* Start the main loop */
 	while (1)
 	{
-		if (interactive_mode)
-			display_prompt(); /* Display the shell prompt */
+		display_prompt(); /* Display the shell prompt */
 
 		/* Read input from the user and handle errors */
 		read_bytes = read(STDIN_FILENO, buffer, BUFFER_SIZE);
