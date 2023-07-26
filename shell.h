@@ -15,6 +15,9 @@
 #define BUFFER_SIZE 1024
 
 void display_prompt();
+char **split_command_line(char *command_line, int *arg_count);
+void execute_with_full_path(char *full_path, char **argv);
+char *find_full_path(char *command);
 void execute_command(char *command_line);
 int custom_strlen(const char *str);
 int custom_strcmp(const char *s1, const char *s2);
