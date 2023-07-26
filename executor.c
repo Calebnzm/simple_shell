@@ -1,4 +1,3 @@
-
 #include "shell.h"
 
 /**
@@ -110,7 +109,15 @@ char *find_full_path(char *command)
 	int j, dir_length, k, cmd_length;
 
 	full_path = NULL;
-	path = getenv("PATH");
+	path = NULL;
+	for (j = 0; environ[j] != NULL; j++)
+	{
+		if (custom_strncmp(environ[j], "PATH=", 5) == 0)
+		{
+			path = environ[j] + 5;
+			break;
+		}
+	}
 	if (path != NULL)
 	{
 		token = strtok(path, ":");
