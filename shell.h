@@ -19,7 +19,7 @@ pid_t pid;
 void writeerror(char *command);
 void freer(char **argv);
 char **environ;
-void display_prompt();
+void display_prompt(void);
 char **split_command_line(char *command_line, int *arg_count);
 void execute_with_full_path(char *full_path, char **argv);
 char *find_full_path(char *command);
