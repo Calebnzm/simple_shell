@@ -76,15 +76,23 @@ else if (pid == 0)
 
             index++;
         }
-        argv[arg_count] = NULL; // Set the last element to NULL to terminate the array
+	argv[arg_count] = NULL; // Set the last element to NULL to terminate the array       
 
-        if (execvp(argv[0], argv) == -1) {
-            perror("Error executing command");
-            for (int j = 0; j < arg_count; j++) {
-                free(argv[j]); // Free the allocated memory for arguments
-            }
-            exit(EXIT_FAILURE);
+           char *envp[] = {
+        "USER=Caleb_Muthama",
+	"HOME=/root",
+	"LANG=en_US.UTF-8",
+	"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        NULL
+    };
+
+    if (execve(argv[0], argv, NULL) == -1) {
+        perror("Error executing command");
+        for (int j = 0; j < arg_count; j++) {
+            free(argv[j]); // Free the allocated memory for arguments
         }
+        exit(EXIT_FAILURE);
+    }
 }
 else
 {
