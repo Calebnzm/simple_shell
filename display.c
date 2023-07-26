@@ -16,3 +16,4 @@ void display_prompt(void)
 	/* Write the prompt to the standard output */
 	write(STDOUT_FILENO, prompt, sizeof(prompt) - 1);
 }
+
