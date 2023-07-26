@@ -58,7 +58,7 @@ char **split_command_line(char *command_line, int *arg_count)
 	i = 0;
 	while (token != NULL)
 	{
-		arg_length = strlen(token);
+		arg_length = custom_strlen(token);
 		argv[i] = malloc((arg_length + 1) * sizeof(char));
 		if (argv[i] == NULL)
 		{
@@ -123,8 +123,8 @@ char *find_full_path(char *command)
 		token = strtok(path, ":");
 		while (token != NULL)
 		{
-			dir_length = strlen(token);
-			cmd_length = strlen(command);
+			dir_length = custom_strlen(token);
+			cmd_length = custom_strlen(command);
 			full_path = malloc((dir_length + cmd_length + 2) * sizeof(char));
 			if (full_path == NULL)
 			{
