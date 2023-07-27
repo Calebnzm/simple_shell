@@ -17,10 +17,12 @@ int handle_builtin_commands(char *command_line)
 	if (custom_strcmp(command_line, "env") == 0)
 	{
 		char **env = environ;
+		int fd = STDOUT_FILENO;
 
 		while (*env != NULL)
 		{
-			printf("%s\n", *env);
+			write(fd, *env, custom_strlen(*env));
+			write(fd, "\n", 1);
 			env++;
 		}
 		return (1);
@@ -57,7 +59,7 @@ char **split_command_line(char *command_line, int *arg_count)
 	i = 0;
 	while (token != NULL)
 	{
-		arg_length = strlen(token);
+		arg_length = custom_strlen(token);
 		argv[i] = malloc((arg_length + 1) * sizeof(char));
 		if (argv[i] == NULL)
 		{
@@ -104,18 +106,25 @@ void execute_with_full_path(char *full_path, char **argv)
  */
 char *find_full_path(char *command)
 {
-	char *full_path, *token, *path;
-	int j, dir_length, k, cmd_length;
+	char *full_path, *path = NULL, *token/* = strtok(path, ":")*/;
+	int j, k;
+	int dir_length, cmd_length = custom_strlen(command);
 
 	full_path = NULL;
-	path = getenv("PATH");
+	for (j = 0; environ[j] != NULL; j++)
+	{
+		if (custom_strncmp(environ[j], "PATH=", 5) == 0)
+		{
+			path = environ[j] + 5;
+			break;
+		}
+	}
 	if (path != NULL)
 	{
 		token = strtok(path, ":");
 		while (token != NULL)
 		{
-			dir_length = strlen(token);
-			cmd_length = strlen(command);
+			dir_length = custom_strlen(token);
 			full_path = malloc((dir_length + cmd_length + 2) * sizeof(char));
 			if (full_path == NULL)
 			{
@@ -123,15 +132,13 @@ char *find_full_path(char *command)
 				exit(EXIT_FAILURE);
 			}
 			for (j = 0; token[j] != '\0'; j++)
-			{
 				full_path[j] = token[j];
-			}
-				full_path[j++] = '/';
+			full_path[j++] = '/';
 			for (k = 0; command[k] != '\0'; k++)
 			{
 				full_path[j++] = command[k];
 			}
-				full_path[j] = '\0';
+			full_path[j] = '\0';
 			if (access(full_path, X_OK) == 0)
 				return (full_path);
 			free(full_path);

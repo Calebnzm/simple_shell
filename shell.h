@@ -10,15 +10,16 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-
+#include <stddef.h>
 #define MAX_COMMAND_LENGTH 100
 #define BUFFER_SIZE 1024
 
+int custom_strncmp(const char *s1, const char *s2, size_t n);
 void saver(char *full_path, char **argv, char *command);
 pid_t pid;
 void writeerror(char *command);
 void freer(char **argv);
-char **environ;
+extern char **environ;
 void display_prompt(void);
 char **split_command_line(char *command_line, int *arg_count);
 void execute_with_full_path(char *full_path, char **argv);
