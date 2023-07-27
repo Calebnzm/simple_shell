@@ -11,9 +11,8 @@
 void display_prompt(void)
 {
 	/* The prompt to be displayed */
-	char prompt[] = "$ ";
+	char prompt[] = "#cisfun$ ";
 
 	/* Write the prompt to the standard output */
 	write(STDOUT_FILENO, prompt, sizeof(prompt) - 1);
 }
-

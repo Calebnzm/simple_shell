@@ -12,8 +12,8 @@
 int main(void)
 {
 	/* Declare variables */
-	char buffer[BUFFER_SIZE]; /* Buffer to store user input */
-	int read_bytes; /* Number of bytes read from user input */
+	int read_bytes;
+	char buffer[BUFFER_SIZE];
 
 	/* Start the main loop */
 	while (1)
@@ -31,13 +31,12 @@ int main(void)
 		/* Check for end of input (Ctrl+D) and break the loop */
 		if (read_bytes == 0)
 		{
-			printf("\n"); /* Print a new line to keep the output clean */
+			write(STDOUT_FILENO, "\n", 1); /* Print a new line using write */
 			break; /* Exit the loop */
 		}
 
 		buffer[read_bytes - 1] = '\0'; /* Null-terminate the input string */
 		execute_command(buffer); /* Execute the command entered by the user */
 	}
-
 	return (0); /* Indicate successful program termination */
 }
