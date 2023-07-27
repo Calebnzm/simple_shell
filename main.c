@@ -8,7 +8,7 @@
 */
 int main(void)
 {
-	system("sh");
+	run();
 
 	return (0);
 }

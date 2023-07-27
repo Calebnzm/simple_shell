@@ -14,6 +14,7 @@
 #define MAX_COMMAND_LENGTH 100
 #define BUFFER_SIZE 1024
 
+void run(void);
 int custom_strncmp(const char *s1, const char *s2, size_t n);
 void saver(char *full_path, char **argv, char *command);
 pid_t pid;
