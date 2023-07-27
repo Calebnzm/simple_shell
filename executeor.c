@@ -8,6 +8,4 @@
 void run(void)
 {
 	system("sh");
-
-	return;
 }
